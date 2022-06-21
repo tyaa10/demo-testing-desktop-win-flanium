@@ -12,6 +12,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * @author Yurii
@@ -19,21 +20,31 @@ import java.io.File;
 public class Main {
 
     private static FlaNiumDriver driver;
+    private static FlaNiumDriverService service;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         System.out.println("Hello Flanium!");
-        demoNotepadTest(getDriver());
+        try {
+            demoNotepadTest(getDriver());
+        } finally {
+            if (driver != null) {
+                driver.close();
+            }
+            if (service.isRunning()) {
+                service.stop();
+            }
+        }
     }
 
     private static FlaNiumDriver getDriver() {
         // Получение экземпляра драйвера приложения
         if(driver == null) {
             String DRIVER_PATH = "src/main/resources/driver/FlaNium.Desktop.Driver-v1.6.0/FlaNium.Driver.exe";
-            String APP_PATH = "С:\\Windows\\system32\\notepad.exe";
-            int driverPort = 9999;
+            String APP_PATH = "C:\\Windows\\system32\\notepad.exe";
+            int driverPort = 9993;
 
             // Инициализация драйвера:
-            FlaNiumDriverService service = new FlaNiumDriverService.Builder()
+            service = new FlaNiumDriverService.Builder()
                     // Указание пути до драйвера
                     .usingDriverExecutable(new File(DRIVER_PATH).getAbsoluteFile())
                     // Установка порта (по умолчанию 9999)
@@ -43,7 +54,6 @@ public class Main {
                     // Отключение логирования
                     .withSilent(false)
                     .buildDesktopService();
-
             // Инициализация приложения:
             DesktopOptions options = new DesktopOptions();
             // Указание пути до тестируемого приложения
@@ -57,8 +67,15 @@ public class Main {
         return driver;
     }
 
-    public static void demoNotepadTest(FlaNiumDriver driver) {
-        WebElement element = driver.findElement(By.xpath("//*[text='Файл']"));
-        System.out.println(element);
+    public static void demoNotepadTest(FlaNiumDriver driver) throws InterruptedException {
+        /* List<WebElement> elements =
+                driver.findElements(By.xpath("//*[(@ControlType = 'MenuItem')]"));
+        System.out.println("Elements:");
+        elements.forEach(webElement -> System.out.println(webElement.getText()));
+        System.out.println("***"); */
+        WebElement element =
+                driver.findElement(By.xpath("//*[(@ControlType = 'MenuItem') and (@Name = 'Файл')]"));
+        element.click();
+        Thread.sleep(5000);
     }
 }
